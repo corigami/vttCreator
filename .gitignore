@@ -50,3 +50,4 @@ Temporary Items
 #project files to ignore
 .ppt*
 .mp4
+.json
