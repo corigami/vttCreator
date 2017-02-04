@@ -1,13 +1,25 @@
+<!--
+File: Index.html
+Version 1.0
+Author: Corey T. Willinger
+Description:  A local html application that creates WebVtt text for closed captioning.
+            The program loops the selected video file over the specified duration to make
+            captioning easier.
+ -->
+
 <!DOCTYPE html>
-<html lang="">
+
+<html>
 
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="author" content="Corey Willinger">
-    <link rel="stylesheet" href="css/kb.css">
+    <meta name "description" content "A local html application that creates WebVtt text for closed captioning.
+            The program loops the selected video file over the specified duration to make
+            captioning easier." <link rel="stylesheet" href="css/kb.css">
     <script src="./js/lib/jquery-3.1.1.min.js"></script>
-    <title>Killin' Boars</title>
+    <title>VTT Creator</title>
 </head>
 
 <body>
@@ -20,10 +32,9 @@
             </div>
             <div id="segText-contain">
                 Line #1
-                <textarea id="textline1" class="textInput">Test</textarea>
-                Line #2
+                <textarea id="textline1" class="textInput">Test</textarea> Line #2
                 <textarea id="textline2" class="textInput">Test2</textarea>
-                
+
             </div>
             <div id="segment-contoller-contain">
                 <button type="button" id="prevButton" class="control-button"> Prev </button>
@@ -38,9 +49,9 @@
                 </video>
             </div>
             <div id="controller-contain">
-                    <div class="right "><button type="button" id="durationMinusButton" class="duration-button"> - </button></div>
-                    <div class="center" id="segDurLabel">Segment Duration<br><input id="durationInput" value="5"/></div>
-                    <div class="left"> <button type="button" id="durationPlusButton" class="duration-button"> + </button></div>
+                <div class="right "><button type="button" id="durationMinusButton" class="duration-button"> - </button></div>
+                <div class="center" id="segDurLabel">Segment Duration<br><input id="durationInput" value="5" /></div>
+                <div class="left"> <button type="button" id="durationPlusButton" class="duration-button"> + </button></div>
             </div>
         </div>
     </div>
