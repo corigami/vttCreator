@@ -1,4 +1,10 @@
 /*globals document,VttObject,$:false */
+/*
+* File: controller.js
+* Author: Corey Willinger
+* Description: Logic controller for main page.  
+*/
+
 var View = function() {
     var self = this;
     self.DEFAULT_DURATION = 5;

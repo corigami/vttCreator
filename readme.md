@@ -1,6 +1,4 @@
-<snippet>
-  <content><![CDATA[
-# ${1:VttCreator}
+# VttCreator
 A local html application that creates WebVtt text for closed captioning of HTML5 videos.
 The program loops the selected video file over the specified duration to make captioning easier.
 ## Installation
@@ -31,6 +29,3 @@ TODO: Write history
 TODO: Write credits
 ## License
 TODO: Write license
-]]></content>
-  <tabTrigger>readme</tabTrigger>
-</snippet>

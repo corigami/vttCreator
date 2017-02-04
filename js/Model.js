@@ -1,3 +1,15 @@
+/*globals document,VttObject,$:false */
+/*
+* File: Model.js
+* Author: Corey Willinger
+* Description: Establishes Objects and their behavior
+*/
+
+
+/*
+* @Name: VttRepresents
+* @Description: Stores and updates vtt segment information
+*/
 var SegObject = function(index, start, dur) {
     var self = this;
     self.segIndex = index;
@@ -6,19 +18,24 @@ var SegObject = function(index, start, dur) {
     self.segDuration=dur;
     self.text1="I'm Index" + index;
     self.text2="";
+
+    //Simple copy function
+    self.copy = function(){
+        var temp = new SegObject(0,0,0);
+        temp.segIndex = self.segIndex;
+        temp.segStart = self.segStartTime;
+        temp.segStart = self.segStopTime;
+        temp.segDuration = self.segDuration;
+        temp.text1 = self.text1;
+        temp.text2 = self.text2;
+        return temp;
+    };
 }; 
 
-SegObject.prototype.copy =function(){
-    var temp = new SegObject(0,0,0);
-    temp.segIndex = self.segIndex;
-    temp.segStart = self.segStartTime;
-    temp.segStart = self.segStopTime;
-    temp.segDuration = self.segDuration;
-    temp.text1 = self.text1;
-    temp.text2 = self.text2;
-    return temp;
-}; 
-
+/*
+* @Name: VttObject
+* @Description: Stores and updates vtt file information
+*/
 var VttObject = function(view) {
     var self = this;
     self.numOfSegments = 0;
@@ -78,6 +95,10 @@ var VttObject = function(view) {
     }
 };
 
+/*
+* @Name: VttOutput
+* @Description: Creates VttOuput
+*/
 var VttOutput = function(view){
     var self = this;
     self.HEADER = "WEBVTT\n\n";
