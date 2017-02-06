@@ -2,12 +2,12 @@
 /*
 * File: controller.js
 * Author: Corey Willinger
-* Description: Logic controller for main page.  
+* Description: Logic controller for main page.
 */
 
 var View = function() {
     var self = this;
-    self.DEFAULT_DURATION = 5;
+    self.DEFAULT_DURATION = 3;
     self.vttObj;
     self.currentState;
     self.currentDuration;
@@ -40,7 +40,7 @@ var View = function() {
         //create our model objects;
         self.vttObj = new VttObject(self);
         self.vttObj.addSegment(new SegObject(0,0,self.currentDuration,self.currentDuration));
-        self.workingSeg = self.vttObj.get(self.currentIndex);  
+        self.workingSeg = self.vttObj.get(self.currentIndex);
         self.currentState = new StartState(self);
         self.currentState.setUI();
 
@@ -49,18 +49,19 @@ var View = function() {
             self.videoSeeked();
         });
         self.videoPlayer[0].addEventListener("timeupdate", function() {
-            self.timeUpdated(self.videoPlayer[0].currentTime, self.workingSeg.segStopTime );
+			let stopTime = self.currentDuration + self.workingSeg.segStartTime;
+            self.timeUpdated(self.videoPlayer[0].currentTime, stopTime );
         });
         self.fileSelector.change(function() {
             self.fileName = document.getElementById('fileSelector').value.replace(/.*[\/\\]/, '');
             self.videoPlayer.attr('src', self.fileName);
             self.vttObj = new VttObject(view);
             self.vttObj.addSegment(new SegObject(0,0,self.currentDuration,self.currentDuration));
-            self.workingSeg = self.vttObj.get(self.currentIndex);  
+            self.workingSeg = self.vttObj.get(self.currentIndex);
             self.currentState = new StartState(self);
             self.currentState.setUI();
         });
-                
+
         self.durationInput.change(function() {
             self.currentDuration = self.durationInput.val();
         });
@@ -77,7 +78,7 @@ var View = function() {
         });
 
             self.nextButton.click(function(){
-            self.currentState.updateWorkingSegment(self.currentIndex++);            
+            self.currentState.updateWorkingSegment(self.currentIndex++);
             self.currentState.clickNext();
             self.generateVTT();
         });
@@ -106,7 +107,7 @@ var View = function() {
         }
 };
     self.printCurrentSeg = function(){
-        
+
         console.log("------Current Segment-------")
         console.log(self.workingSeg);
         console.log(" ");
@@ -127,9 +128,10 @@ view.init();
 view.videoPlayer.attr('src', "Slide 10.mp4");
 
 $(document).keypress(function(e){
-    if (e.which == 13){
-        view.nextButton.click();
-    }else if(e.which == 13){
+		    if (e.which == 13){
+		        view.nextButton.click();
+		    }else if(e.which == 13){
 
-    }
+	    	}
+	    	e.stopPropagation();
 });

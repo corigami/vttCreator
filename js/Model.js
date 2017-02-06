@@ -16,7 +16,7 @@ var SegObject = function(index, start, dur) {
     self.segStartTime = start;
     self.segStopTime = start+dur;
     self.segDuration=dur;
-    self.text1="I'm Index" + index;
+    self.text1="";
     self.text2="";
 
     //Simple copy function

@@ -14,7 +14,7 @@ Description:  A local html application that creates WebVtt text for closed capti
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="author" content="Corey Willinger">
-    <meta name "description" content "A local html application that creates WebVtt text for closed captioning.
+    <meta name="description" content="A local html application that creates WebVtt text for closed captioning.
             The program loops the selected video file over the specified duration to make
             captioning easier."/>
     <link rel="stylesheet" href="css/kb.css">
@@ -26,14 +26,15 @@ Description:  A local html application that creates WebVtt text for closed capti
     <div id="main-contain">
         <div id="left-contain">
             <div id="file-contain">
-                <input type="file" id="fileSelector" value="./" />
+                <input type="file" id="fileSelector" />
             </div>
             <div id="blank-contain">
             </div>
             <div id="segText-contain">
                 Line #1
-                <textarea id="textline1" class="textInput">Test</textarea> Line #2
-                <textarea id="textline2" class="textInput">Test2</textarea>
+                <textarea id="textline1" class="textInput"></textarea>
+                Line #2
+                <textarea id="textline2" class="textInput"></textarea>
 
             </div>
             <div id="segment-contoller-contain">
@@ -44,13 +45,13 @@ Description:  A local html application that creates WebVtt text for closed capti
         </div>
         <div id="right-contain">
             <div>
-                <video id="video-player" width="640px" height="480px" controls>
-                    <source src=" " type="video/mp4 "></source>
+                <video id="video-player" width="640" height="480" controls>
+                    <source src="" type="video/mp4"/>
                 </video>
             </div>
             <div id="controller-contain">
                 <div class="right "><button type="button" id="durationMinusButton" class="duration-button"> - </button></div>
-                <div class="center" id="segDurLabel">Segment Duration<br><input id="durationInput" value="5" /></div>
+                <div class="center" id="segDurLabel">Segment Duration<br><input id="durationInput" value="3" /></div>
                 <div class="left"> <button type="button" id="durationPlusButton" class="duration-button"> + </button></div>
             </div>
         </div>
@@ -58,8 +59,9 @@ Description:  A local html application that creates WebVtt text for closed capti
     <div id="vttOutput">
         <textarea id="vttOutputText" class="textInput" rows="20">Ouput</textarea>
     </div>
-</body>
-<script src="./js/Model.js"></script>
-<script src="./js/PlayerState.js"></script>
+    <script src="./js/Model.js"></script>
+	<script src="./js/PlayerState.js"></script>
 <script src="./js/Controller.js "></script>
+</body>
+
 </html>
