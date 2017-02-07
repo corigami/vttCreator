@@ -100,7 +100,7 @@ var VttOutput = function(view){
     var self = this;
     self.HEADER = "WEBVTT\n\n" +
                 "0\n" +
-                "00:00:00.000 --> 00:00:00.000\n\n" +
+                "00:00:00.000 --> 00:00:00.100\n\n" +
                 "NOTE This the Closed Captioning File\n\n";
     self.output="";
 
