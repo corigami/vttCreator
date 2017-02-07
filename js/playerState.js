@@ -1,3 +1,4 @@
+/*globals document,view,VttOutput,$:false */
 var ControllerState = function(view){
     this.name = "BaseState";
 };
@@ -5,7 +6,7 @@ var ControllerState = function(view){
 ControllerState.prototype.setState= function(){
     console.log("Current State = " + this.name);
     //check conditions of current segment vs. player time and assign appropriate state.
-    if(view.currentIndex==0){
+    if(view.currentIndex===0){
         view.currentState = view.START_STATE;
     //if we are not the first one, are we at the end?
     }else if(!view.vttObj.vttSegArray[view.currentIndex+1]){
@@ -29,15 +30,15 @@ ControllerState.prototype.setUISegData= function(){
             view.text1.val(view.workingSeg.text1);
             view.text2.val(view.workingSeg.text2);
             view.durationInput.val(view.workingSeg.segDuration);
-            view.currentDuration = view.workingSeg.segDuration
+            view.currentDuration = view.workingSeg.segDuration;
 };
 
 //updates the working segment with data from the UI
-ControllerState.prototype.updateWorkingSegment = function(index){
+ControllerState.prototype.updateWorkingSegment = function(){
     view.workingSeg.text1 = view.text1.val();
     view.workingSeg.text2 = view.text2.val();
     view.vttObj.updateSegment(view.workingSeg);
-}
+};
 
 var StartState = function(view) {
     this.name = "StartState";

@@ -1,4 +1,4 @@
-/*globals document,VttObject,$:false */
+
 /*
 * File: controller.js
 * Author: Corey Willinger
@@ -67,29 +67,30 @@ var View = function() {
         });
 
         self.durationPlusButton.click(function(){
-            let time = parseFloat(self.currentDuration) + .5;
+            let time = parseFloat(self.currentDuration) + 0.5;
             self.currentDuration = time;
             self.durationInput.val(self.currentDuration);
         });
         self.durationMinusButton.click(function(){
-            let time = parseFloat(self.currentDuration) - .5;
+            let time = parseFloat(self.currentDuration) - 0.5;
             self.currentDuration = time;
             self.durationInput.val(self.currentDuration);
         });
 
             self.nextButton.click(function(){
-            self.currentState.updateWorkingSegment(self.currentIndex++);
+            self.currentIndex++;
+            self.currentState.updateWorkingSegment();
             self.currentState.clickNext();
             self.generateVTT();
         });
         self.prevButton.click(function(){
-            self.currentState.updateWorkingSegment(self.currentIndex--);
+            self.currentIndex--;
+            self.currentState.updateWorkingSegment();
             self.currentState.clickPrev();
             self.generateVTT();
         });
             self.finishButton.click(function(){
-            self.currentState.updateWorkingSegment(self.currentIndex--);
-            self.currentState.clickPrev();
+            self.currentState.updateWorkingSegment();
             self.generateVTT();
         });
       };

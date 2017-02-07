@@ -1,4 +1,4 @@
-/*globals document,VttObject,$:false */
+/*globals,  false */
 /*
 * File: Model.js
 * Author: Corey Willinger
@@ -45,20 +45,19 @@ var VttObject = function(view) {
     self.addSegment = function(segment){
         self.vttSegArray.push(segment);
         self.numOfSegments++;
-    }
+    };
 
     //updates the array with the new segment.  If there is a change in segment segDuration
     // a call to updateSegmentTimes() is made
     self.updateSegment = function(segment){
         if(self.vttSegArray[segment.segIndex].segDuration != view.currentDuration){
            let diff = view.currentDuration - segment.segDuration;
-            console.log(diff);
             segment.segDuration = view.currentDuration;
             self.updateSegmentTimes(segment,diff);
             
-        };
+        }
         self.vttSegArray[segment.segIndex] = segment;
-    }
+    };
 
     //removes the segment, and calls update segment times accordingly
     self.deleteSegment = function(segment){
@@ -68,31 +67,29 @@ var VttObject = function(view) {
                 seg.segIndex--;
             }
         });
-        vttSegArray.splice(segment.segIndex,1);
+        self.vttSegArray.splice(segment.segIndex,1);
         self.numOfSegments--;
-    }
+    };
 
     //given the time, update any segments with the time change 
     self.updateSegmentTimes=function(segment,time){
         let i = segment.segIndex;
-        console.log("here");
         for(i ; i < self.vttSegArray.length;i++){
-            let tempSeg = self.vttSegArray[i];
+            self.vttSegArray[i];
             if(i==segment.segIndex){
-                tempSeg.segStopTime += time;
+                self.vttSegArray[i].segStopTime += time;
             }else{
-   
-                tempSeg.segStartTime += time;
-                tempSeg.segStopTime =  tempSeg.segStartTime+ tempSeg.segDuration;
-                self.updateSegment(tempSeg);
+                self.vttSegArray[i].segStartTime += time;
+                self.vttSegArray[i].segStopTime =  self.vttSegArray[i].segStartTime+ self.vttSegArray[i].segDuration;
+               //self.updateSegment(tempSeg);
             }
 
         }
-    } 
+    }; 
 
     self.get = function(index){
         return self.vttSegArray[index];
-    }
+    };
 };
 
 /*
@@ -101,7 +98,10 @@ var VttObject = function(view) {
 */
 var VttOutput = function(view){
     var self = this;
-    self.HEADER = "WEBVTT\n\n";
+    self.HEADER = "WEBVTT\n\n" +
+                "0\n" +
+                "00:00:00.000 --> 00:00:00.000\n\n" +
+                "NOTE This the Closed Captioning File\n\n";
     self.output="";
 
     self.buildOutput = function(){
@@ -109,30 +109,31 @@ var VttOutput = function(view){
         self.output = self.HEADER;
 
         view.vttObj.vttSegArray.forEach(function(seg){
-            self.output += (seg.segIndex+'\n');
+            
+            //offset the index by 1 to account for 0 initial blank cue.
+            self.output += (seg.segIndex + 1 +'\n');
             self.output += (self.formatTime(seg, seg.segStartTime));
             self.output += " --> ";
             self.output += (self.formatTime(seg, seg.segStopTime) + '\n');
-            if(seg.text1 != ""){
+            
+            //if the line is not black, add the output and a carriage return
+            if(seg.text1 !== ""){
                 self.output += seg.text1.trim() + '\n';
-                if(seg.text2 != ""){
-                    self.output += seg.text2.trim() + '\n';
-                } 
-                self.output += '\n';
-            }
-             
+            }      
+            if(seg.text2 !== ""){
+                self.output += seg.text2.trim() + '\n';
+            } 
+            self.output += '\n';      
         });
-
        
     console.log(self.output);
     return self.output;
-    }
+    };
 
     self.formatTime = function(seg, time){
         var hr = 0;
         var min = 0;
         var sec = 0;
-        var ms = 0;
         var remain = 0;
 
         //format start time
@@ -152,4 +153,4 @@ var VttOutput = function(view){
         }
         return (hr + ":" + min + ":" + sec);
     };
-}
+};
