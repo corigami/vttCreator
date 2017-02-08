@@ -1,9 +1,8 @@
-
 /*
-* File: controller.js
-* Author: Corey Willinger
-* Description: Logic controller for main page.
-*/
+ * File: controller.js
+ * Author: Corey Willinger
+ * Description: Logic controller for main page.
+ */
 
 var View = function() {
     var self = this;
@@ -39,7 +38,7 @@ var View = function() {
 
         //create our model objects;
         self.vttObj = new VttObject(self);
-        self.vttObj.addSegment(new SegObject(0,0,self.currentDuration,self.currentDuration));
+        self.vttObj.addSegment(new SegObject(0, 0, self.currentDuration, self.currentDuration));
         self.workingSeg = self.vttObj.get(self.currentIndex);
         self.currentState = new StartState(self);
         self.currentState.setUI();
@@ -49,14 +48,14 @@ var View = function() {
             self.videoSeeked();
         });
         self.videoPlayer[0].addEventListener("timeupdate", function() {
-			let stopTime = self.currentDuration + self.workingSeg.segStartTime;
-            self.timeUpdated(self.videoPlayer[0].currentTime, stopTime );
+            let stopTime = self.currentDuration + self.workingSeg.segStartTime;
+            self.timeUpdated(self.videoPlayer[0].currentTime, stopTime);
         });
         self.fileSelector.change(function() {
             self.fileName = document.getElementById('fileSelector').value.replace(/.*[\/\\]/, '');
             self.videoPlayer.attr('src', self.fileName);
             self.vttObj = new VttObject(view);
-            self.vttObj.addSegment(new SegObject(0,0,self.currentDuration,self.currentDuration));
+            self.vttObj.addSegment(new SegObject(0, 0, self.currentDuration, self.currentDuration));
             self.workingSeg = self.vttObj.get(self.currentIndex);
             self.currentState = new StartState(self);
             self.currentState.setUI();
@@ -66,34 +65,34 @@ var View = function() {
             self.currentDuration = self.durationInput.val();
         });
 
-        self.durationPlusButton.click(function(){
+        self.durationPlusButton.click(function() {
             let time = parseFloat(self.currentDuration) + 0.5;
             self.currentDuration = time;
             self.durationInput.val(self.currentDuration);
         });
-        self.durationMinusButton.click(function(){
+        self.durationMinusButton.click(function() {
             let time = parseFloat(self.currentDuration) - 0.5;
             self.currentDuration = time;
             self.durationInput.val(self.currentDuration);
         });
 
-            self.nextButton.click(function(){
+        self.nextButton.click(function() {
             self.currentIndex++;
             self.currentState.updateWorkingSegment();
             self.currentState.clickNext();
             self.generateVTT();
         });
-        self.prevButton.click(function(){
+        self.prevButton.click(function() {
             self.currentIndex--;
             self.currentState.updateWorkingSegment();
             self.currentState.clickPrev();
             self.generateVTT();
         });
-            self.finishButton.click(function(){
+        self.finishButton.click(function() {
             self.currentState.updateWorkingSegment();
             self.generateVTT();
         });
-      };
+    };
 
     //plays the video when the time has changed.
     self.videoSeeked = function() {
@@ -103,11 +102,11 @@ var View = function() {
     //sets the player to the current segment start time
     //TODO need to add logic to check for nearest segment
     self.timeUpdated = function(time, sTime) {
-        if(time >= sTime){
+        if (time >= sTime) {
             self.videoPlayer.get(0).currentTime = self.workingSeg.segStartTime;
         }
-};
-    self.printCurrentSeg = function(){
+    };
+    self.printCurrentSeg = function() {
 
         console.log("------Current Segment-------")
         console.log(self.workingSeg);
@@ -119,8 +118,8 @@ var View = function() {
         console.log("------End Segment-------")
     };
 
-    self.generateVTT = function(){
-            self.outputText.val(self.outputObj.buildOutput());
+    self.generateVTT = function() {
+        self.outputText.val(self.outputObj.buildOutput());
     };
 };
 
@@ -128,11 +127,11 @@ var view = new View();
 view.init();
 view.videoPlayer.attr('src', "Slide 10.mp4");
 
-$(document).keypress(function(e){
-		    if (e.which == 13){
-		        view.nextButton.click();
-		    }else if(e.which == 13){
+$(document).keypress(function(e) {
+    if (e.which == 13) {
+        view.nextButton.click();
+    } else if (e.which == 13) {
 
-	    	}
-	    	e.stopPropagation();
+    }
+    e.stopPropagation();
 });
