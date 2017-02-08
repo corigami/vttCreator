@@ -112,21 +112,22 @@ var VttOutput = function(view){
             
             //offset the index by 1 to account for 0 initial blank cue.
             self.output += (seg.segIndex + 1 +'\n');
-            self.output += (self.formatTime(seg, seg.segStartTime));
-            self.output += " --> ";
-            self.output += (self.formatTime(seg, seg.segStopTime) + '\n');
-            
-            //if the line is not black, add the output and a carriage return
-            if(seg.text1 !== ""){
-                self.output += seg.text1.trim() + '\n';
-            }      
-            if(seg.text2 !== ""){
-                self.output += seg.text2.trim() + '\n';
-            } 
-            self.output += '\n';      
-        });
-       
-    console.log(self.output);
+
+            //insert time hack only if it is non null
+            if(seg.text1 !== "" || seg.text2 !== ""){
+                self.output += (self.formatTime(seg, seg.segStartTime));
+                self.output += " --> ";
+                self.output += (self.formatTime(seg, seg.segStopTime) + '\n');
+                if(seg.text1 !== ""){
+                    self.output += seg.text1.trim() + '\n';
+                }      
+                if(seg.text2 !== ""){
+                    self.output += seg.text2.trim() + '\n';
+                }  
+             }
+                     self.output += "\n";     
+        });          
+ 
     return self.output;
     };
 
