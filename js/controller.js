@@ -16,7 +16,8 @@ var View = function() {
     //initializes the program on page load.
     self.init = function() {
         //define inital view objects based on starting dom
-        self.fileSelector = $('#fileSelector');
+        self.urlInput = $('#videoUrl');
+        self.loadVidButton = $('#loadVidButton');
         self.videoPlayer = $('#video-player');
         self.durationInput = $('#durationInput');
         self.durationPlusButton = $('#durationPlusButton');
@@ -51,15 +52,38 @@ var View = function() {
             let stopTime = self.currentDuration + self.workingSeg.segStartTime;
             self.timeUpdated(self.videoPlayer[0].currentTime, stopTime);
         });
-        self.fileSelector.change(function() {
+
+        // ***********Remove for widget version **********************************
+            self.fileSelector = $('<input type="file" id="fileSelector" />');
+             $('#file-contain').append(self.fileSelector);
+            self.fileSelector.change(function() {
             self.fileName = document.getElementById('fileSelector').value.replace(/.*[\/\\]/, '');
-            self.videoPlayer.attr('src', self.fileName);
+            self.loadVideoFile(self.fileName);
+        });
+
+        // ***********Remove for widget version **********************************
+
+        self.loadVidButton.click(function(){
+            self.fileName = self.urlInput.val();
+            self.loadVideoFile(self.fileName);
+            console.log("here")
+        });
+
+        self.urlInput.keyup(function(){
+            if(validUrl(self.urlInput.val())){
+                 $('#loadVidButton').prop('disabled',false);
+            }
+        });
+
+        self.loadVideoFile = function(src){
+            console.log("here:1");
+            self.videoPlayer.attr('src',src);
             self.vttObj = new VttObject(view);
             self.vttObj.addSegment(new SegObject(0, 0, self.currentDuration, self.currentDuration));
             self.workingSeg = self.vttObj.get(self.currentIndex);
             self.currentState = new StartState(self);
             self.currentState.setUI();
-        });
+        };
 
         self.durationInput.change(function() {
             self.currentDuration = self.durationInput.val();
@@ -121,12 +145,19 @@ var View = function() {
     self.generateVTT = function() {
         self.outputText.val(self.outputObj.buildOutput());
     };
+
 };
+
+validUrl = function(str) {
+var pattern = /^(http|https)?:\/\/[a-zA-Z0-9-\.]+\.[a-z]{2,4}/;
+    return pattern.test(str);
+}
 
 var view = new View();
 view.init();
-view.videoPlayer.attr('src', "Slide 10.mp4");
+//view.videoPlayer.attr('src', "Slide 10.mp4");
 
+/*
 $(document).keypress(function(e) {
     if (e.which == 13) {
         view.nextButton.click();
@@ -134,4 +165,4 @@ $(document).keypress(function(e) {
 
     }
     e.stopPropagation();
-});
+}); */

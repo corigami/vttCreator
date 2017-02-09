@@ -17,7 +17,7 @@ Description:  A local html application that creates WebVtt text for closed capti
     <meta name="description" content="A local html application that creates WebVtt text for closed captioning.
             The program loops the selected video file over the specified duration to make
             captioning easier." />
-    <link rel="stylesheet" href="css/kb.css">
+    <link rel="stylesheet" href="css/style.css">
     <script src="./js/lib/jquery-3.1.1.min.js"></script>
     <title>VTT Creator</title>
 </head>
@@ -26,7 +26,8 @@ Description:  A local html application that creates WebVtt text for closed capti
     <div id="main-contain">
         <div id="left-contain">
             <div id="file-contain">
-                <input type="file" id="fileSelector" />
+                <input type="text" id="videoUrl" placeholder="or paste in a url"/>
+                <button type="button" id="loadVidButton" disabled> Load Video</button> 
             </div>
             <div id="blank-contain">
             </div>

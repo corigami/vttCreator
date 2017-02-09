@@ -17,7 +17,7 @@ Description:  A local html application that creates WebVtt text for closed capti
     <meta name="description" content="A local html application that creates WebVtt text for closed captioning.
             The program loops the selected video file over the specified duration to make
             captioning easier." />
-    <script src="./js/lib/jquery-3.1.1.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <title>VTT Creator</title>
 
     <!-- copy in style from style.css -->
@@ -43,6 +43,7 @@ Description:  A local html application that creates WebVtt text for closed capti
         #vttOutput textarea {
             width: 100%;
             height: 100%;
+            min-height: 500px;
         }
         
         #left-contain {
@@ -75,6 +76,11 @@ Description:  A local html application that creates WebVtt text for closed capti
             display: flex;
             justify-content: space-around;
             padding: 30px;
+        }
+        
+        #videoUrl {
+            width: 100%;
+            margin: 5px;
         }
         
         .control-button {
@@ -141,7 +147,8 @@ Description:  A local html application that creates WebVtt text for closed capti
     <div id="main-contain">
         <div id="left-contain">
             <div id="file-contain">
-                <input type="file" id="fileSelector" />
+                <input type="text" id="videoUrl" placeholder="or paste in a url" />
+                <button type="button" id="loadVidButton"> Load Video</button>
             </div>
             <div id="blank-contain">
             </div>
@@ -345,7 +352,6 @@ Description:  A local html application that creates WebVtt text for closed capti
     };
 
     ControllerState.prototype.setState = function() {
-        console.log("Current State = " + this.name);
         //check conditions of current segment vs. player time and assign appropriate state.
         if (view.currentIndex === 0) {
             view.currentState = view.START_STATE;
@@ -360,14 +366,12 @@ Description:  A local html application that creates WebVtt text for closed capti
         } else { //we're not at the end, or the first
             view.currentState = view.NOT_HEAD_STATE;
         }
-        console.log("Changed To: " + view.currentState.name);
         view.currentState.setUI();
         view.videoPlayer[0].currentTime = view.workingSeg.segStartTime;
     };
 
     //sets the data on the screen
     ControllerState.prototype.setUISegData = function() {
-        console.log("currentIndex: " + view.currentIndex + '  numOfSegs: ' + view.vttObj.numOfSegments);
         view.text1.val(view.workingSeg.text1);
         view.text2.val(view.workingSeg.text2);
         view.durationInput.val(view.workingSeg.segDuration);
@@ -511,7 +515,8 @@ Description:  A local html application that creates WebVtt text for closed capti
         //initializes the program on page load.
         self.init = function() {
             //define inital view objects based on starting dom
-            self.fileSelector = $('#fileSelector');
+            self.urlInput = $('#videoUrl');
+            self.loadVidButton = $('#loadVidButton');
             self.videoPlayer = $('#video-player');
             self.durationInput = $('#durationInput');
             self.durationPlusButton = $('#durationPlusButton');
@@ -546,15 +551,31 @@ Description:  A local html application that creates WebVtt text for closed capti
                 let stopTime = self.currentDuration + self.workingSeg.segStartTime;
                 self.timeUpdated(self.videoPlayer[0].currentTime, stopTime);
             });
-            self.fileSelector.change(function() {
-                self.fileName = document.getElementById('fileSelector').value.replace(/.*[\/\\]/, '');
-                self.videoPlayer.attr('src', self.fileName);
+
+            // ***********Remove for widget version **********************************
+            // ***********Remove for widget version **********************************
+
+            self.loadVidButton.click(function() {
+                self.fileName = self.urlInput.val();
+                self.loadVideoFile(self.fileName);
+                console.log("here")
+            });
+
+            self.urlInput.keyup(function() {
+                if (validUrl(self.urlInput.val())) {
+                    $('#loadVidButton').prop('disabled', false);
+                }
+            });
+
+            self.loadVideoFile = function(src) {
+                console.log("here:1");
+                self.videoPlayer.attr('src', src);
                 self.vttObj = new VttObject(view);
                 self.vttObj.addSegment(new SegObject(0, 0, self.currentDuration, self.currentDuration));
                 self.workingSeg = self.vttObj.get(self.currentIndex);
                 self.currentState = new StartState(self);
                 self.currentState.setUI();
-            });
+            };
 
             self.durationInput.change(function() {
                 self.currentDuration = self.durationInput.val();
@@ -616,20 +637,16 @@ Description:  A local html application that creates WebVtt text for closed capti
         self.generateVTT = function() {
             self.outputText.val(self.outputObj.buildOutput());
         };
+
     };
+
+    validUrl = function(str) {
+        var pattern = /^(http|https)?:\/\/[a-zA-Z0-9-\.]+\.[a-z]{2,4}/;
+        return pattern.test(str);
+    }
 
     var view = new View();
     view.init();
-    view.videoPlayer.attr('src', "Slide 10.mp4");
-
-    $(document).keypress(function(e) {
-        if (e.which == 13) {
-            view.nextButton.click();
-        } else if (e.which == 13) {
-
-        }
-        e.stopPropagation();
-    });
 </script>
 
 </html>
