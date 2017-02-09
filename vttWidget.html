@@ -1,0 +1,635 @@
+<!--
+File: Index.html
+Author: Corey T. Willinger
+Description:  A local html application that creates WebVtt text for closed captioning.
+            The program loops the selected video file over the specified duration to make
+            captioning easier.
+ -->
+
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="Corey Willinger">
+    <meta name="description" content="A local html application that creates WebVtt text for closed captioning.
+            The program loops the selected video file over the specified duration to make
+            captioning easier." />
+    <script src="./js/lib/jquery-3.1.1.min.js"></script>
+    <title>VTT Creator</title>
+
+    <!-- copy in style from style.css -->
+    <style>
+        body {
+            margin: 0 auto;
+            width: 100%;
+        }
+        
+        #main-contain {
+            display: flex;
+            margin: 0 auto;
+            min-width: 800px;
+            max-width: 1200px;
+        }
+        
+        #vttOutput {
+            margin: 0 auto;
+            min-width: 800px;
+            max-width: 1200px;
+        }
+        
+        #vttOutput textarea {
+            width: 100%;
+            height: 100%;
+        }
+        
+        #left-contain {
+            width: 400px;
+        }
+        
+        #right-contain {
+            width: 660px;
+        }
+        
+        #file-contain {
+            height: 60px;
+            padding: 10px;
+        }
+        
+        #blank-contain {
+            height: 200px;
+        }
+        
+        #segText-contain {
+            height: 200px;
+            display: flex;
+            flex-flow: column;
+            justify-content: flex-end;
+            padding: 0 0 0 15px;
+        }
+        
+        #segment-contoller-contain {
+            height: 40px;
+            display: flex;
+            justify-content: space-around;
+            padding: 30px;
+        }
+        
+        .control-button {
+            width: 120px;
+            height: 40px;
+            border-radius: 10px;
+            font-size: 1.5em;
+        }
+        
+        .duration-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            flex-grow: 1;
+            font-size: 2em;
+        }
+        
+        .textInput {
+            width: 370px;
+            height: 60px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            border: solid 1px lightgray;
+        }
+        
+        .inline {
+            width: 120px;
+            margin: auto auto;
+        }
+        
+        .center {
+            text-align: center;
+        }
+        
+        #controller-contain {
+            display: flex;
+            padding: 30px;
+            margin: auto 0;
+        }
+        
+        #controller-contain>div {
+            width: 30%;
+        }
+        
+        #controller-contain>.left {
+            text-align: left;
+        }
+        
+        #controller-contain>.right {
+            text-align: right;
+        }
+        
+        #durationInput {
+            width: 60px;
+            margin: auto 20px;
+            font-size: 1.3em;
+            text-align: center;
+        }
+    </style>
+    <!--   end Style section -->
+</head>
+
+<body>
+    <div id="main-contain">
+        <div id="left-contain">
+            <div id="file-contain">
+                <input type="file" id="fileSelector" />
+            </div>
+            <div id="blank-contain">
+            </div>
+            <div id="segText-contain">
+                Line #1
+                <textarea id="textline1" class="textInput"></textarea> Line #2
+                <textarea id="textline2" class="textInput"></textarea>
+
+            </div>
+            <div id="segment-contoller-contain">
+                <button type="button" id="prevButton" class="control-button"> Prev </button>
+                <button type="button" id="nextButton" class="control-button"> Next </button>
+                <button type="button" id="finishButton" class="control-button"> Finish </button>
+            </div>
+        </div>
+        <div id="right-contain">
+            <div>
+                <video id="video-player" width="640" height="480" controls>
+                    <source src="" type="video/mp4"/>
+                </video>
+            </div>
+            <div id="controller-contain">
+                <div class="right "><button type="button" id="durationMinusButton" class="duration-button"> - </button></div>
+                <div class="center" id="segDurLabel">Segment Duration<br><input id="durationInput" value="3" /></div>
+                <div class="left"> <button type="button" id="durationPlusButton" class="duration-button"> + </button></div>
+            </div>
+        </div>
+    </div>
+    <div id="vttOutput">
+        <textarea id="vttOutputText" class="textInput" rows="20">Ouput</textarea>
+    </div>
+</body>
+
+
+<!-- paste in script from Model.js -->
+<script>
+    /*globals,  false */
+    /*
+     * File: Model.js
+     * Author: Corey Willinger
+     * Description: Establishes Objects and their behavior
+     */
+
+
+    /*
+     * @Name: VttRepresents
+     * @Description: Stores and updates vtt segment information
+     */
+    var SegObject = function(index, start, dur) {
+        var self = this;
+        self.segIndex = index;
+        self.segStartTime = start;
+        self.segStopTime = start + dur;
+        self.segDuration = dur;
+        self.text1 = "";
+        self.text2 = "";
+
+        //Simple copy function
+        self.copy = function() {
+            var temp = new SegObject(0, 0, 0);
+            temp.segIndex = self.segIndex;
+            temp.segStart = self.segStartTime;
+            temp.segStart = self.segStopTime;
+            temp.segDuration = self.segDuration;
+            temp.text1 = self.text1;
+            temp.text2 = self.text2;
+            return temp;
+        };
+    };
+
+    /*
+     * @Name: VttObject
+     * @Description: Stores and updates vtt file information
+     */
+    var VttObject = function(view) {
+        var self = this;
+        self.numOfSegments = 0;
+        self.vttSegArray = [];
+
+        //adds a segment to our array and increment total count
+        self.addSegment = function(segment) {
+            self.vttSegArray.push(segment);
+            self.numOfSegments++;
+        };
+
+        //updates the array with the new segment.  If there is a change in segment segDuration
+        // a call to updateSegmentTimes() is made
+        self.updateSegment = function(segment) {
+            if (self.vttSegArray[segment.segIndex].segDuration != view.currentDuration) {
+                let diff = view.currentDuration - segment.segDuration;
+                segment.segDuration = view.currentDuration;
+                self.updateSegmentTimes(segment, diff);
+
+            }
+            self.vttSegArray[segment.segIndex] = segment;
+        };
+
+        //removes the segment, and calls update segment times accordingly
+        self.deleteSegment = function(segment) {
+            self.updateSegmentTimes(segment, -segment.segDuration);
+            self.vttSegArray.forEach(function(seg) {
+                if (seg.segIndex > segment.segIndex) {
+                    seg.segIndex--;
+                }
+            });
+            self.vttSegArray.splice(segment.segIndex, 1);
+            self.numOfSegments--;
+        };
+
+        //given the time, update any segments with the time change 
+        self.updateSegmentTimes = function(segment, time) {
+            let i = segment.segIndex;
+            for (i; i < self.vttSegArray.length; i++) {
+                self.vttSegArray[i];
+                if (i == segment.segIndex) {
+                    self.vttSegArray[i].segStopTime += time;
+                } else {
+                    self.vttSegArray[i].segStartTime += time;
+                    self.vttSegArray[i].segStopTime = self.vttSegArray[i].segStartTime + self.vttSegArray[i].segDuration;
+                    //self.updateSegment(tempSeg);
+                }
+
+            }
+        };
+
+        self.get = function(index) {
+            return self.vttSegArray[index];
+        };
+    };
+
+    /*
+     * @Name: VttOutput
+     * @Description: Creates VttOuput
+     */
+    var VttOutput = function(view) {
+        var self = this;
+        self.HEADER = "WEBVTT\n\n" +
+            "0\n" +
+            "00:00:00.000 --> 00:00:00.100\n\n" +
+            "NOTE This the Closed Captioning File\n\n";
+        self.output = "";
+
+        self.buildOutput = function() {
+
+            self.output = self.HEADER;
+
+            view.vttObj.vttSegArray.forEach(function(seg) {
+
+                //offset the index by 1 to account for 0 initial blank cue.
+                self.output += (seg.segIndex + 1 + '\n');
+
+                //insert time hack only if it is non null
+                if (seg.text1 !== "" || seg.text2 !== "") {
+                    self.output += (self.formatTime(seg, seg.segStartTime));
+                    self.output += " --> ";
+                    self.output += (self.formatTime(seg, seg.segStopTime) + '\n');
+                    if (seg.text1 !== "") {
+                        self.output += seg.text1.trim() + '\n';
+                    }
+                    if (seg.text2 !== "") {
+                        self.output += seg.text2.trim() + '\n';
+                    }
+                }
+                self.output += "\n";
+            });
+
+            return self.output;
+        };
+
+        self.formatTime = function(seg, time) {
+            var hr = 0;
+            var min = 0;
+            var sec = 0;
+            var remain = 0;
+
+            //format start time
+            hr = parseInt(time / 3600);
+            if (hr < 10) {
+                hr = "0" + hr;
+            }
+            remain = time - (hr * 3600);
+            min = parseInt(remain / 60);
+            if (min < 10) {
+                min = "0" + min;
+            }
+            remain = remain - (min * 60);
+            sec = remain.toFixed(3);
+            if (sec < 10) {
+                sec = "0" + sec;
+            }
+            return (hr + ":" + min + ":" + sec);
+        };
+    };
+</script>
+
+<!-- paste in script from PlayerState.js -->
+<script>
+    /*globals document,view,VttOutput,$:false */
+    var ControllerState = function(view) {
+        this.name = "BaseState";
+    };
+
+    ControllerState.prototype.setState = function() {
+        console.log("Current State = " + this.name);
+        //check conditions of current segment vs. player time and assign appropriate state.
+        if (view.currentIndex === 0) {
+            view.currentState = view.START_STATE;
+            //if we are not the first one, are we at the end?
+        } else if (!view.vttObj.vttSegArray[view.currentIndex + 1]) {
+            //check to see if we'd be the last segment in the video...
+            if (view.videoPlayer[0].duration < view.workingSeg.segStopTime) {
+                view.currentState = view.END_STATE;
+            } else { //we're not,
+                view.currentState = view.HEAD_STATE;
+            }
+        } else { //we're not at the end, or the first
+            view.currentState = view.NOT_HEAD_STATE;
+        }
+        console.log("Changed To: " + view.currentState.name);
+        view.currentState.setUI();
+        view.videoPlayer[0].currentTime = view.workingSeg.segStartTime;
+    };
+
+    //sets the data on the screen
+    ControllerState.prototype.setUISegData = function() {
+        console.log("currentIndex: " + view.currentIndex + '  numOfSegs: ' + view.vttObj.numOfSegments);
+        view.text1.val(view.workingSeg.text1);
+        view.text2.val(view.workingSeg.text2);
+        view.durationInput.val(view.workingSeg.segDuration);
+        view.currentDuration = view.workingSeg.segDuration;
+    };
+
+    //updates the working segment with data from the UI
+    ControllerState.prototype.updateWorkingSegment = function() {
+        view.workingSeg.text1 = view.text1.val();
+        view.workingSeg.text2 = view.text2.val();
+        view.vttObj.updateSegment(view.workingSeg);
+    };
+
+    //Defines behavior when we are on the first possible segment.
+    //It extends the ControllerState prototype
+    var StartState = function(view) {
+        this.name = "StartState";
+        this.clickNext = function() {
+            if (!view.vttObj.get(view.currentIndex)) {
+                //create a new working segment.
+                let start = view.workingSeg.segStopTime;
+                let stop = view.workingSeg.segStartTime + view.DEFAULT_DURATION;
+                view.vttObj.addSegment(new SegObject(view.currentIndex, start, view.DEFAULT_DURATION));
+            }
+            view.workingSeg = view.vttObj.get(view.currentIndex);
+            this.setState();
+        };
+        this.clickPrev = function() {
+            //should do nothing, we are at the beginning
+        };
+
+        //TODO implement this in the UI
+        this.clickInsert = function() {
+            //we'll need to update indexes and time
+        };
+
+        this.setUI = function() {
+            view.prevButton.prop('disabled', true);
+            this.setUISegData(view.currentIndex);
+        };
+    };
+    StartState.prototype = Object.create(ControllerState.prototype);
+
+    //Defines behavior when we are on the newest created segment, but not first or last.
+    //It extends the ControllerState prototype
+    var HeadState = function(view) {
+        this.name = "HeadState";
+        this.clickNext = function() {
+            let start = view.workingSeg.segStopTime;
+            let stop = view.workingSeg.segStartTime + view.DEFAULT_DURATION;
+            view.vttObj.addSegment(new SegObject(view.currentIndex, start, view.DEFAULT_DURATION));
+            view.workingSeg = view.vttObj.get(view.currentIndex);
+            this.setState();
+        };
+
+        this.clickPrev = function() {
+            view.workingSeg = view.vttObj.vttSegArray[view.currentIndex];
+            this.setState();
+        };
+
+        this.clickInsert = function() {};
+
+        this.setUI = function() {
+            view.prevButton.prop('disabled', false);
+            view.nextButton.prop('disabled', false);
+            this.setUISegData();
+        };
+    };
+    HeadState.prototype = Object.create(ControllerState.prototype);
+
+    //Defines the behavior when we are not on the first segment, the last segment,
+    //or the head segment. It extends the ControllerState prototype
+    var NotHeadState = function(view) {
+        this.name = "NotHeadState";
+        this.clickNext = function() {
+            view.workingSeg = view.vttObj.get(view.currentIndex);
+            this.setState();
+        };
+        this.clickPrev = function() {
+            view.workingSeg = view.vttObj.get(view.currentIndex);
+            this.setState();
+        };
+
+        this.clickInsert = function() {};
+
+        this.setUI = function() {
+            view.prevButton.prop('disabled', false);
+            view.nextButton.prop('disabled', false);
+            this.setUISegData();
+        };
+    };
+    NotHeadState.prototype = Object.create(ControllerState.prototype);
+
+    //Defines our behavor when we are on the last possible segment.
+    //It extends the ControllerState prototype
+    var EndState = function(view) {
+        this.name = "EndState";
+        this.clickNext = function() {
+            //this should be disabled
+
+        };
+        this.clickPrev = function() {
+            view.workingSeg = view.vttObj.get(view.currentIndex);
+            this.setState();
+        };
+        this.clickInsert = function() {
+
+        };
+        this.durationChanged = function() {
+
+        };
+        this.setUI = function() {
+            view.prevButton.prop('disabled', false);
+            view.nextButton.prop('disabled', true);
+            this.setUISegData();
+            view.currentDuration = view.videoPlayer[0].duration - view.workingSeg.segStartTime
+            view.durationInput.val(view.currentDuration);
+            view.workingSeg.segStopTime = view.workingSeg.segStartTime + view.currentDuration;
+        };
+    };
+    EndState.prototype = Object.create(ControllerState.prototype);
+</script>
+
+<!-- paste in script from Controller.js -->
+<script>
+    /*
+     * File: controller.js
+     * Author: Corey Willinger
+     * Description: Logic controller for main page.
+     */
+
+    var View = function() {
+        var self = this;
+        self.DEFAULT_DURATION = 3;
+        self.vttObj;
+        self.currentState;
+        self.currentDuration;
+        self.currentIndex = 0;
+        self.fileName = "";
+
+        //initializes the program on page load.
+        self.init = function() {
+            //define inital view objects based on starting dom
+            self.fileSelector = $('#fileSelector');
+            self.videoPlayer = $('#video-player');
+            self.durationInput = $('#durationInput');
+            self.durationPlusButton = $('#durationPlusButton');
+            self.durationMinusButton = $('#durationMinusButton');
+            self.nextButton = $('#nextButton');
+            self.prevButton = $('#prevButton');
+            self.finishButton = $('#finishButton');
+            self.text1 = $('#textline1');
+            self.text2 = $('#textline2');
+            self.currentDuration = parseFloat($('#durationInput').val());
+            self.outputText = $('#vttOutputText');
+            self.outputObj = new VttOutput(self);
+
+            //create our state objects
+            self.START_STATE = new StartState(self);
+            self.HEAD_STATE = new HeadState(self);
+            self.NOT_HEAD_STATE = new NotHeadState(self);
+            self.END_STATE = new EndState(self);
+
+            //create our model objects;
+            self.vttObj = new VttObject(self);
+            self.vttObj.addSegment(new SegObject(0, 0, self.currentDuration, self.currentDuration));
+            self.workingSeg = self.vttObj.get(self.currentIndex);
+            self.currentState = new StartState(self);
+            self.currentState.setUI();
+
+            //add event listeners to our UI
+            self.videoPlayer[0].addEventListener("seeked", function() {
+                self.videoSeeked();
+            });
+            self.videoPlayer[0].addEventListener("timeupdate", function() {
+                let stopTime = self.currentDuration + self.workingSeg.segStartTime;
+                self.timeUpdated(self.videoPlayer[0].currentTime, stopTime);
+            });
+            self.fileSelector.change(function() {
+                self.fileName = document.getElementById('fileSelector').value.replace(/.*[\/\\]/, '');
+                self.videoPlayer.attr('src', self.fileName);
+                self.vttObj = new VttObject(view);
+                self.vttObj.addSegment(new SegObject(0, 0, self.currentDuration, self.currentDuration));
+                self.workingSeg = self.vttObj.get(self.currentIndex);
+                self.currentState = new StartState(self);
+                self.currentState.setUI();
+            });
+
+            self.durationInput.change(function() {
+                self.currentDuration = self.durationInput.val();
+            });
+
+            self.durationPlusButton.click(function() {
+                let time = parseFloat(self.currentDuration) + 0.5;
+                self.currentDuration = time;
+                self.durationInput.val(self.currentDuration);
+            });
+            self.durationMinusButton.click(function() {
+                let time = parseFloat(self.currentDuration) - 0.5;
+                self.currentDuration = time;
+                self.durationInput.val(self.currentDuration);
+            });
+
+            self.nextButton.click(function() {
+                self.currentIndex++;
+                self.currentState.updateWorkingSegment();
+                self.currentState.clickNext();
+                self.generateVTT();
+            });
+            self.prevButton.click(function() {
+                self.currentIndex--;
+                self.currentState.updateWorkingSegment();
+                self.currentState.clickPrev();
+                self.generateVTT();
+            });
+            self.finishButton.click(function() {
+                self.currentState.updateWorkingSegment();
+                self.generateVTT();
+            });
+        };
+
+        //plays the video when the time has changed.
+        self.videoSeeked = function() {
+            self.videoPlayer[0].play();
+        };
+
+        //sets the player to the current segment start time
+        //TODO need to add logic to check for nearest segment
+        self.timeUpdated = function(time, sTime) {
+            if (time >= sTime) {
+                self.videoPlayer.get(0).currentTime = self.workingSeg.segStartTime;
+            }
+        };
+        self.printCurrentSeg = function() {
+
+            console.log("------Current Segment-------")
+            console.log(self.workingSeg);
+            console.log(" ");
+            console.log("Index: " + self.workingSeg.segIndex);
+            console.log("StartTime: " + self.workingSeg.segStartTime);
+            console.log("StopTime: " + self.workingSeg.segStopTime);
+            console.log("Duration: " + self.workingSeg.segDuration);
+            console.log("------End Segment-------")
+        };
+
+        self.generateVTT = function() {
+            self.outputText.val(self.outputObj.buildOutput());
+        };
+    };
+
+    var view = new View();
+    view.init();
+    view.videoPlayer.attr('src', "Slide 10.mp4");
+
+    $(document).keypress(function(e) {
+        if (e.which == 13) {
+            view.nextButton.click();
+        } else if (e.which == 13) {
+
+        }
+        e.stopPropagation();
+    });
+</script>
+
+</html>
