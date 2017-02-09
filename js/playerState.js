@@ -40,6 +40,8 @@ ControllerState.prototype.updateWorkingSegment = function() {
     view.vttObj.updateSegment(view.workingSeg);
 };
 
+//Defines behavior when we are on the first possible segment.
+//It extends the ControllerState prototype
 var StartState = function(view) {
     this.name = "StartState";
     this.clickNext = function() {
@@ -68,6 +70,8 @@ var StartState = function(view) {
 };
 StartState.prototype = Object.create(ControllerState.prototype);
 
+//Defines behavior when we are on the newest created segment, but not first or last.
+//It extends the ControllerState prototype
 var HeadState = function(view) {
     this.name = "HeadState";
     this.clickNext = function() {
@@ -93,6 +97,8 @@ var HeadState = function(view) {
 };
 HeadState.prototype = Object.create(ControllerState.prototype);
 
+//Defines the behavior when we are not on the first segment, the last segment,
+//or the head segment. It extends the ControllerState prototype
 var NotHeadState = function(view) {
     this.name = "NotHeadState";
     this.clickNext = function() {
@@ -114,6 +120,8 @@ var NotHeadState = function(view) {
 };
 NotHeadState.prototype = Object.create(ControllerState.prototype);
 
+//Defines our behavor when we are on the last possible segment.
+//It extends the ControllerState prototype
 var EndState = function(view) {
     this.name = "EndState";
     this.clickNext = function() {
