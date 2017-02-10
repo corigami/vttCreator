@@ -19,6 +19,7 @@ Description:  A local html application that creates WebVtt text for closed capti
             captioning easier." />
     <link rel="stylesheet" href="css/style.css">
     <script src="./js/lib/jquery-3.1.1.min.js"></script>
+    <script src="https://www.youtube.com/iframe_api"></script>
     <title>VTT Creator</title>
 </head>
 
@@ -27,7 +28,8 @@ Description:  A local html application that creates WebVtt text for closed capti
         <div id="left-contain">
             <div id="file-contain">
                 <input type="text" id="videoUrl" placeholder="or paste in a url"/>
-                <button type="button" id="loadVidButton" disabled> Load Video</button> 
+                <button type="button" id="loadVidButton" disabled> Load Video</button>
+                <div id="local-file"></div> 
             </div>
             <div id="blank-contain">
             </div>
@@ -44,10 +46,7 @@ Description:  A local html application that creates WebVtt text for closed capti
             </div>
         </div>
         <div id="right-contain">
-            <div>
-                <video id="video-player" width="640" height="480" controls>
-                    <source src="" type="video/mp4"/>
-                </video>
+             <div id="vid-contain">
             </div>
             <div id="controller-contain">
                 <div class="right "><button type="button" id="durationMinusButton" class="duration-button"> - </button></div>
@@ -60,7 +59,8 @@ Description:  A local html application that creates WebVtt text for closed capti
         <textarea id="vttOutputText" class="textInput" rows="20">Ouput</textarea>
     </div>
     <script src="./js/Model.js"></script>
-    <script src="./js/PlayerState.js"></script>
+     <script src="./js/PlayerState.js"></script>
+    <script src="./js/ControllerState.js"></script>
     <script src="./js/Controller.js "></script>
 </body>
 

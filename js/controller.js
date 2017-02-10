@@ -8,9 +8,10 @@ var View = function() {
     var self = this;
     self.DEFAULT_DURATION = 3;
     self.vttObj;
-    self.currentState;
+    self.controllerState;
+    self.playerState;
     self.currentDuration;
-    self.currentIndex = 0;
+    self.currentIndex;
     self.fileName = "";
 
     //initializes the program on page load.
@@ -18,7 +19,7 @@ var View = function() {
         //define inital view objects based on starting dom
         self.urlInput = $('#videoUrl');
         self.loadVidButton = $('#loadVidButton');
-        self.videoPlayer = $('#video-player');
+        self.videoPlayer;
         self.durationInput = $('#durationInput');
         self.durationPlusButton = $('#durationPlusButton');
         self.durationMinusButton = $('#durationMinusButton');
@@ -29,7 +30,6 @@ var View = function() {
         self.text2 = $('#textline2');
         self.currentDuration = parseFloat($('#durationInput').val());
         self.outputText = $('#vttOutputText');
-        self.outputObj = new VttOutput(self);
 
         //create our state objects
         self.START_STATE = new StartState(self);
@@ -37,52 +37,50 @@ var View = function() {
         self.NOT_HEAD_STATE = new NotHeadState(self);
         self.END_STATE = new EndState(self);
 
-        //create our model objects;
-        self.vttObj = new VttObject(self);
-        self.vttObj.addSegment(new SegObject(0, 0, self.currentDuration, self.currentDuration));
-        self.workingSeg = self.vttObj.get(self.currentIndex);
-        self.currentState = new StartState(self);
-        self.currentState.setUI();
 
-        //add event listeners to our UI
-        self.videoPlayer[0].addEventListener("seeked", function() {
-            self.videoSeeked();
-        });
-        self.videoPlayer[0].addEventListener("timeupdate", function() {
-            let stopTime = self.currentDuration + self.workingSeg.segStartTime;
-            self.timeUpdated(self.videoPlayer[0].currentTime, stopTime);
-        });
+        self.initGUI = function() {
+            self.text1.val('');
+            self.text2.val('');
+            self.outputText.val('');
+            self.initModel();
+            self.controllerState.setUI();
+        };
 
-        // ***********Remove for widget version **********************************
-            self.fileSelector = $('<input type="file" id="fileSelector" />');
-             $('#file-contain').append(self.fileSelector);
-            self.fileSelector.change(function() {
-            self.fileName = document.getElementById('fileSelector').value.replace(/.*[\/\\]/, '');
-            self.loadVideoFile(self.fileName);
-        });
+        self.initModel = function() {
+            self.currentIndex = 0;
+            self.vttObj = new VttObject(self);
+            self.vttObj.addSegment(new SegObject(0, 0, self.DEFAULT_DURATION, self.DEFAULT_DURATION));
+            self.workingSeg = self.vttObj.get(0);
+            self.controllerState = new StartState(self);
+            self.outputObj = new VttOutput(self);
+            self.controllerState = new StartState(self);
+
+        };
 
         // ***********Remove for widget version **********************************
+        self.loadFileSelector();
+        // ***********Remove for widget version **********************************
 
-        self.loadVidButton.click(function(){
+        self.loadVidButton.click(function() {
             self.fileName = self.urlInput.val();
             self.loadVideoFile(self.fileName);
-            console.log("here")
         });
 
-        self.urlInput.keyup(function(){
-            if(validUrl(self.urlInput.val())){
-                 $('#loadVidButton').prop('disabled',false);
+        self.urlInput.keyup(function() {
+            if (validUrl(self.urlInput.val())) {
+                $('#loadVidButton').prop('disabled', false);
             }
         });
 
-        self.loadVideoFile = function(src){
-            console.log("here:1");
-            self.videoPlayer.attr('src',src);
-            self.vttObj = new VttObject(view);
-            self.vttObj.addSegment(new SegObject(0, 0, self.currentDuration, self.currentDuration));
-            self.workingSeg = self.vttObj.get(self.currentIndex);
-            self.currentState = new StartState(self);
-            self.currentState.setUI();
+        self.loadVideoFile = function(src) {
+            self.loadFileSelector();
+            if (src.substring(0, 23).includes("youtube")) {
+                self.addYouTubePlayer(src);
+            } else {
+                self.addMp4Player(src);
+            }
+
+            self.initGUI();
         };
 
         self.durationInput.change(function() {
@@ -102,36 +100,29 @@ var View = function() {
 
         self.nextButton.click(function() {
             self.currentIndex++;
-            self.currentState.updateWorkingSegment();
-            self.currentState.clickNext();
+            self.controllerState.updateWorkingSegment();
+            self.controllerState.clickNext();
             self.generateVTT();
         });
         self.prevButton.click(function() {
             self.currentIndex--;
-            self.currentState.updateWorkingSegment();
-            self.currentState.clickPrev();
+            self.controllerState.updateWorkingSegment();
+            self.controllerState.clickPrev();
             self.generateVTT();
         });
         self.finishButton.click(function() {
-            self.currentState.updateWorkingSegment();
+            self.controllerState.updateWorkingSegment();
             self.generateVTT();
         });
-    };
 
-    //plays the video when the time has changed.
-    self.videoSeeked = function() {
-        self.videoPlayer[0].play();
     };
-
     //sets the player to the current segment start time
     //TODO need to add logic to check for nearest segment
-    self.timeUpdated = function(time, sTime) {
-        if (time >= sTime) {
-            self.videoPlayer.get(0).currentTime = self.workingSeg.segStartTime;
-        }
-    };
-    self.printCurrentSeg = function() {
+   // self.timeUpdated = function(time, sTime) {
+  //      self.playerState.timeUpdated(time,sTime);
+  //  };
 
+    self.printCurrentSeg = function() {
         console.log("------Current Segment-------")
         console.log(self.workingSeg);
         console.log(" ");
@@ -146,10 +137,67 @@ var View = function() {
         self.outputText.val(self.outputObj.buildOutput());
     };
 
+    self.loadFileSelector = function() {
+        $('#local-file').empty();
+        $('#local-file').append('<br>or<br><br><input type="file" id="fileSelector" />');
+        self.fileSelector = $('#fileSelector');
+        self.fileSelector.change(function() {
+            self.fileName = $('#fileSelector').val().replace(/.*[\/\\]/, '');
+            self.loadVideoFile(self.fileName);
+            self.urlInput.val('');
+        });
+
+    }
+    self.addYouTubePlayer = function(src) {
+        $('#vid-contain').empty();
+        $('#vid-contain').append('<div id="youTube-contain"></div>');
+        var onPlayerReady = function(event) {
+            event.target.playVideo();
+        };
+
+        //get vid id from youTube src
+        var video_id = src.split('v=')[1];
+        var ampersandPosition = video_id.indexOf('&');
+        if (ampersandPosition != -1) {
+            video_id = video_id.substring(0, ampersandPosition);
+        }
+
+        // The first argument of YT.Player is an HTML element ID. YouTube API will replace my <div id="player"> tag with an iframe containing the youtube video.
+        self.youTubePlayer = new YT.Player('youTube-contain', {
+            height: 480,
+            width: 640,
+            videoId: video_id,
+            events: {
+                'onReady': onPlayerReady
+            }
+        });
+
+        self.playerState = new YouTubeState(self);
+
+
+
+    };
+
+    self.addMp4Player = function(src) {
+        var vidContainer = $('#vid-contain');
+        vidContainer.empty();
+        vidContainer.append('<video id="video-player" width="640" height="480" controls>' +
+            '<source src="" type="video/mp4"/>' +
+            '</video>');
+        self.videoPlayer = $('#video-player');
+        self.videoPlayer = $('#video-player');
+        view.videoPlayer.attr('src', src);
+        self.playerState = new StandardState(self);
+
+        //add event listeners to our UI
+    };
+
 };
 
+
+
 validUrl = function(str) {
-var pattern = /^(http|https)?:\/\/[a-zA-Z0-9-\.]+\.[a-z]{2,4}/;
+    var pattern = /^(http|https)?:\/\/[a-zA-Z0-9-\.]+\.[a-z]{2,4}/;
     return pattern.test(str);
 }
 
