@@ -18,6 +18,7 @@ Description:  A local html application that creates WebVtt text for closed capti
             The program loops the selected video file over the specified duration to make
             captioning easier." />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="https://www.youtube.com/iframe_api"></script>
     <title>VTT Creator</title>
 
     <!-- copy in style from style.css -->
@@ -148,7 +149,8 @@ Description:  A local html application that creates WebVtt text for closed capti
         <div id="left-contain">
             <div id="file-contain">
                 <input type="text" id="videoUrl" placeholder="or paste in a url" />
-                <button type="button" id="loadVidButton"> Load Video</button>
+                <button type="button" id="loadVidButton" disabled> Load Video</button>
+                <div id="local-file"></div>
             </div>
             <div id="blank-contain">
             </div>
@@ -166,9 +168,6 @@ Description:  A local html application that creates WebVtt text for closed capti
         </div>
         <div id="right-contain">
             <div id="vid-contain">
-                <video id="video-player" width="640" height="480" controls>
-                    <source src="" type="video/mp4"/>
-                </video>
             </div>
             <div id="controller-contain">
                 <div class="right "><button type="button" id="durationMinusButton" class="duration-button"> - </button></div>
@@ -347,27 +346,106 @@ Description:  A local html application that creates WebVtt text for closed capti
 <!-- paste in script from PlayerState.js -->
 <script>
     /*globals document,view,VttOutput,$:false */
+    var PlayerState = function(view) {
+        self = this;
+        self.isAtEnd = function() {}
+        this.name = "BaseState";
+    };
+
+    //Defines behavior when we are a standard html5 player.
+    //It extends the PlayerState prototype
+    var StandardState = function(view) {
+        self = this;
+        self.name = "StandardState";
+        self.setTime = function(time) {
+            view.videoPlayer[0].currentTime = view.workingSeg.segStartTime;
+        };
+
+        self.isAtEnd = function() {
+            return (view.videoPlayer[0].duration < view.workingSeg.segStopTime)
+        };
+
+        self.setMaxDuration = function() {
+            view.currentDuration = view.videoPlayer[0].duration - view.workingSeg.segStartTime
+        }
+
+        //TODO need to add logic to check for nearest segment
+        view.videoPlayer[0].addEventListener("seeked", function() {
+            view.videoPlayer[0].play();
+        });
+
+        view.videoPlayer[0].addEventListener("timeupdate", function() {
+            let stopTime = view.currentDuration + view.workingSeg.segStartTime;
+            if (view.videoPlayer[0].currentTime >= stopTime) {
+                self.setTime(view.workingSeg.segStartTime);
+            }
+        });
+
+    };
+    StandardState.prototype = Object.create(PlayerState.prototype);
+
+    //Defines behavior when we are a youTube player.
+    //It extends the PlayerState prototype
+    var YouTubeState = function(view) {
+        self = this;
+        self.name = "YouTubeState";
+        self.videoTime = 0;
+        self.setTime = function(time) {
+            view.youTubePlayer.seekTo(time, true);
+            view.youTubePlayer.playVideo();
+            self.checkTime();
+        };
+
+        self.isAtEnd = function() {
+            return (view.youTubePlayer.getDuration() < view.workingSeg.segStopTime)
+        };
+
+        self.setMaxDuration = function() {
+            view.currentDuration = view.youTubePlayer.getDuration() - view.workingSeg.segStartTime
+        }
+
+        //You tube doesn't have an time Event trigger, so we have to make check periodically
+        self.checkTime = function() {
+            setTimeout(function() {
+                let stopTime = view.currentDuration + view.workingSeg.segStartTime;
+                var videotime = view.youTubePlayer.getCurrentTime();
+                if (videotime < stopTime) {
+                    self.checkTime(); //Recursive call.
+                } else {
+                    self.setTime(view.workingSeg.segStartTime);
+                }
+            }, 100);
+        }
+    };
+    YouTubeState.prototype = Object.create(PlayerState.prototype);
+</script>
+
+<!-- paste in script from ControllerState.js -->
+<script>
+    /*globals document,view,VttOutput,$:false */
     var ControllerState = function(view) {
         this.name = "BaseState";
     };
 
     ControllerState.prototype.setState = function() {
+        console.log(view.controllerState.name);
         //check conditions of current segment vs. player time and assign appropriate state.
         if (view.currentIndex === 0) {
-            view.currentState = view.START_STATE;
+            view.controllerState = view.START_STATE;
             //if we are not the first one, are we at the end?
         } else if (!view.vttObj.vttSegArray[view.currentIndex + 1]) {
             //check to see if we'd be the last segment in the video...
-            if (view.videoPlayer[0].duration < view.workingSeg.segStopTime) {
-                view.currentState = view.END_STATE;
+            if (view.playerState.isAtEnd()) {
+                view.controllerState = view.END_STATE;
             } else { //we're not,
-                view.currentState = view.HEAD_STATE;
+                view.controllerState = view.HEAD_STATE;
             }
         } else { //we're not at the end, or the first
-            view.currentState = view.NOT_HEAD_STATE;
+            view.controllerState = view.NOT_HEAD_STATE;
         }
-        view.currentState.setUI();
-        view.videoPlayer[0].currentTime = view.workingSeg.segStartTime;
+        view.controllerState.setUI();
+        console.log(view.controllerState.name);
+        view.playerState.setTime(view.workingSeg.segStartTime);
     };
 
     //sets the data on the screen
@@ -487,14 +565,13 @@ Description:  A local html application that creates WebVtt text for closed capti
             view.prevButton.prop('disabled', false);
             view.nextButton.prop('disabled', true);
             this.setUISegData();
-            view.currentDuration = view.videoPlayer[0].duration - view.workingSeg.segStartTime
+            view.playerState.setMaxDuration();
             view.durationInput.val(view.currentDuration);
             view.workingSeg.segStopTime = view.workingSeg.segStartTime + view.currentDuration;
         };
     };
     EndState.prototype = Object.create(ControllerState.prototype);
 </script>
-
 <!-- paste in script from Controller.js -->
 <script>
     /*
@@ -507,9 +584,10 @@ Description:  A local html application that creates WebVtt text for closed capti
         var self = this;
         self.DEFAULT_DURATION = 3;
         self.vttObj;
-        self.currentState;
+        self.controllerState;
+        self.playerState;
         self.currentDuration;
-        self.currentIndex = 0;
+        self.currentIndex;
         self.fileName = "";
 
         //initializes the program on page load.
@@ -517,7 +595,7 @@ Description:  A local html application that creates WebVtt text for closed capti
             //define inital view objects based on starting dom
             self.urlInput = $('#videoUrl');
             self.loadVidButton = $('#loadVidButton');
-            self.videoPlayer = $('#video-player');
+            self.videoPlayer;
             self.durationInput = $('#durationInput');
             self.durationPlusButton = $('#durationPlusButton');
             self.durationMinusButton = $('#durationMinusButton');
@@ -528,7 +606,6 @@ Description:  A local html application that creates WebVtt text for closed capti
             self.text2 = $('#textline2');
             self.currentDuration = parseFloat($('#durationInput').val());
             self.outputText = $('#vttOutputText');
-            self.outputObj = new VttOutput(self);
 
             //create our state objects
             self.START_STATE = new StartState(self);
@@ -536,21 +613,25 @@ Description:  A local html application that creates WebVtt text for closed capti
             self.NOT_HEAD_STATE = new NotHeadState(self);
             self.END_STATE = new EndState(self);
 
-            //create our model objects;
-            self.vttObj = new VttObject(self);
-            self.vttObj.addSegment(new SegObject(0, 0, self.currentDuration, self.currentDuration));
-            self.workingSeg = self.vttObj.get(self.currentIndex);
-            self.currentState = new StartState(self);
-            self.currentState.setUI();
 
-            //add event listeners to our UI
-            self.videoPlayer[0].addEventListener("seeked", function() {
-                self.videoSeeked();
-            });
-            self.videoPlayer[0].addEventListener("timeupdate", function() {
-                let stopTime = self.currentDuration + self.workingSeg.segStartTime;
-                self.timeUpdated(self.videoPlayer[0].currentTime, stopTime);
-            });
+            self.initGUI = function() {
+                self.text1.val('');
+                self.text2.val('');
+                self.outputText.val('');
+                self.initModel();
+                self.controllerState.setUI();
+            };
+
+            self.initModel = function() {
+                self.currentIndex = 0;
+                self.vttObj = new VttObject(self);
+                self.vttObj.addSegment(new SegObject(0, 0, self.DEFAULT_DURATION, self.DEFAULT_DURATION));
+                self.workingSeg = self.vttObj.get(0);
+                self.controllerState = new StartState(self);
+                self.outputObj = new VttOutput(self);
+                self.controllerState = new StartState(self);
+
+            };
 
             // ***********Remove for widget version **********************************
             // ***********Remove for widget version **********************************
@@ -558,7 +639,6 @@ Description:  A local html application that creates WebVtt text for closed capti
             self.loadVidButton.click(function() {
                 self.fileName = self.urlInput.val();
                 self.loadVideoFile(self.fileName);
-                console.log("here")
             });
 
             self.urlInput.keyup(function() {
@@ -568,13 +648,14 @@ Description:  A local html application that creates WebVtt text for closed capti
             });
 
             self.loadVideoFile = function(src) {
-                console.log("here:1");
-                self.videoPlayer.attr('src', src);
-                self.vttObj = new VttObject(view);
-                self.vttObj.addSegment(new SegObject(0, 0, self.currentDuration, self.currentDuration));
-                self.workingSeg = self.vttObj.get(self.currentIndex);
-                self.currentState = new StartState(self);
-                self.currentState.setUI();
+                self.loadFileSelector();
+                if (src.substring(0, 23).includes("youtube")) {
+                    self.addYouTubePlayer(src);
+                } else {
+                    self.addMp4Player(src);
+                }
+
+                self.initGUI();
             };
 
             self.durationInput.change(function() {
@@ -594,36 +675,24 @@ Description:  A local html application that creates WebVtt text for closed capti
 
             self.nextButton.click(function() {
                 self.currentIndex++;
-                self.currentState.updateWorkingSegment();
-                self.currentState.clickNext();
+                self.controllerState.updateWorkingSegment();
+                self.controllerState.clickNext();
                 self.generateVTT();
             });
             self.prevButton.click(function() {
                 self.currentIndex--;
-                self.currentState.updateWorkingSegment();
-                self.currentState.clickPrev();
+                self.controllerState.updateWorkingSegment();
+                self.controllerState.clickPrev();
                 self.generateVTT();
             });
             self.finishButton.click(function() {
-                self.currentState.updateWorkingSegment();
+                self.controllerState.updateWorkingSegment();
                 self.generateVTT();
             });
+
         };
 
-        //plays the video when the time has changed.
-        self.videoSeeked = function() {
-            self.videoPlayer[0].play();
-        };
-
-        //sets the player to the current segment start time
-        //TODO need to add logic to check for nearest segment
-        self.timeUpdated = function(time, sTime) {
-            if (time >= sTime) {
-                self.videoPlayer.get(0).currentTime = self.workingSeg.segStartTime;
-            }
-        };
         self.printCurrentSeg = function() {
-
             console.log("------Current Segment-------")
             console.log(self.workingSeg);
             console.log(" ");
@@ -636,6 +705,63 @@ Description:  A local html application that creates WebVtt text for closed capti
 
         self.generateVTT = function() {
             self.outputText.val(self.outputObj.buildOutput());
+        };
+
+        self.loadFileSelector = function() {
+            $('#local-file').empty();
+            $('#local-file').append('<br>or<br><br><input type="file" id="fileSelector" />');
+            self.fileSelector = $('#fileSelector');
+            self.fileSelector.change(function() {
+                self.fileName = $('#fileSelector').val().replace(/.*[\/\\]/, '');
+                self.loadVideoFile(self.fileName);
+                self.urlInput.val('');
+            });
+
+        }
+
+        self.addYouTubePlayer = function(src) {
+            $('#vid-contain').empty();
+            $('#vid-contain').append('<div id="youTube-contain"></div>');
+            var onPlayerReady = function(event) {
+                event.target.playVideo();
+            };
+
+            //get vid id from youTube src
+            var video_id = src.split('v=')[1];
+            var ampersandPosition = video_id.indexOf('&');
+            if (ampersandPosition != -1) {
+                video_id = video_id.substring(0, ampersandPosition);
+            }
+
+            // The first argument of YT.Player is an HTML element ID. YouTube API will replace my <div id="player"> tag with an iframe containing the youtube video.
+            self.youTubePlayer = new YT.Player('youTube-contain', {
+                height: 480,
+                width: 640,
+                videoId: video_id,
+                events: {
+                    'onReady': function() {
+                        self.playerState = new YouTubeState(self);
+                        self.youTubePlayer.playVideo();
+                        self.playerState.checkTime();
+                    }
+                }
+            });
+
+        };
+
+        self.addMp4Player = function(src) {
+            var vidContainer = $('#vid-contain');
+            vidContainer.empty();
+            vidContainer.append('<video id="video-player" width="640" height="480" controls>' +
+                '<source src="" type="video/mp4"/>' +
+                '</video>');
+            self.videoPlayer = $('#video-player');
+            self.videoPlayer = $('#video-player');
+            view.videoPlayer.attr('src', src);
+            self.playerState = new StandardState(self);
+            self.videoPlayer[0].play();
+
+            //add event listeners to our UI
         };
 
     };
