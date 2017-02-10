@@ -164,15 +164,13 @@ var View = function() {
             width: 640,
             videoId: video_id,
             events: {
-                'onReady': function(){
+                'onReady': function() {
                     self.playerState = new YouTubeState(self);
                     self.youTubePlayer.playVideo();
                     self.playerState.checkTime();
                 }
             }
         });
-
-        
 
     };
 
@@ -186,6 +184,7 @@ var View = function() {
         self.videoPlayer = $('#video-player');
         view.videoPlayer.attr('src', src);
         self.playerState = new StandardState(self);
+        self.videoPlayer[0].play();
 
         //add event listeners to our UI
     };
