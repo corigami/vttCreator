@@ -74,7 +74,7 @@ var View = function() {
 
         self.loadVideoFile = function(src) {
             self.loadFileSelector();
-            if (src.substring(0, 23).includes("youtube")) {
+             if (src.indexOf("youtube") >= 0) {
                 self.addYouTubePlayer(src);
             } else {
                 self.addMp4Player(src);
