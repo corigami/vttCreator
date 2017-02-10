@@ -4,23 +4,24 @@ var ControllerState = function(view) {
 };
 
 ControllerState.prototype.setState = function() {
+    console.log(view.controllerState.name);
     //check conditions of current segment vs. player time and assign appropriate state.
     if (view.currentIndex === 0) {
-        view.currentState = view.START_STATE;
+        view.controllerState = view.START_STATE;
         //if we are not the first one, are we at the end?
     } else if (!view.vttObj.vttSegArray[view.currentIndex + 1]) {
         //check to see if we'd be the last segment in the video...
-        if (view.videoPlayer[0].duration < view.workingSeg.segStopTime) {
-            view.currentState = view.END_STATE;
+        if (view.playerState.isAtEnd()) {
+            view.controllerState = view.END_STATE;
         } else { //we're not,
-            view.currentState = view.HEAD_STATE;
+            view.controllerState = view.HEAD_STATE;
         }
     } else { //we're not at the end, or the first
-        view.currentState = view.NOT_HEAD_STATE;
+        view.controllerState = view.NOT_HEAD_STATE;
     }
-    view.currentState.setUI();
+    view.controllerState.setUI();
+    console.log(view.controllerState.name);
     view.playerState.setTime(view.workingSeg.segStartTime);
-    //view.videoPlayer[0].currentTime = view.workingSeg.segStartTime;
 };
 
 //sets the data on the screen
@@ -140,7 +141,7 @@ var EndState = function(view) {
         view.prevButton.prop('disabled', false);
         view.nextButton.prop('disabled', true);
         this.setUISegData();
-        view.currentDuration = view.videoPlayer[0].duration - view.workingSeg.segStartTime
+        view.playerState.setMaxDuration();
         view.durationInput.val(view.currentDuration);
         view.workingSeg.segStopTime = view.workingSeg.segStartTime + view.currentDuration;
     };

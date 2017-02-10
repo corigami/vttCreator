@@ -116,11 +116,6 @@ var View = function() {
         });
 
     };
-    //sets the player to the current segment start time
-    //TODO need to add logic to check for nearest segment
-   // self.timeUpdated = function(time, sTime) {
-  //      self.playerState.timeUpdated(time,sTime);
-  //  };
 
     self.printCurrentSeg = function() {
         console.log("------Current Segment-------")
@@ -148,6 +143,7 @@ var View = function() {
         });
 
     }
+
     self.addYouTubePlayer = function(src) {
         $('#vid-contain').empty();
         $('#vid-contain').append('<div id="youTube-contain"></div>');
@@ -168,13 +164,15 @@ var View = function() {
             width: 640,
             videoId: video_id,
             events: {
-                'onReady': onPlayerReady
+                'onReady': function(){
+                    self.playerState = new YouTubeState(self);
+                    self.youTubePlayer.playVideo();
+                    self.playerState.checkTime();
+                }
             }
         });
 
-        self.playerState = new YouTubeState(self);
-
-
+        
 
     };
 
@@ -194,8 +192,6 @@ var View = function() {
 
 };
 
-
-
 validUrl = function(str) {
     var pattern = /^(http|https)?:\/\/[a-zA-Z0-9-\.]+\.[a-z]{2,4}/;
     return pattern.test(str);
@@ -203,14 +199,3 @@ validUrl = function(str) {
 
 var view = new View();
 view.init();
-//view.videoPlayer.attr('src', "Slide 10.mp4");
-
-/*
-$(document).keypress(function(e) {
-    if (e.which == 13) {
-        view.nextButton.click();
-    } else if (e.which == 13) {
-
-    }
-    e.stopPropagation();
-}); */
