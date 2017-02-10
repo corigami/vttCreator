@@ -88,12 +88,12 @@ var View = function() {
         });
 
         self.durationPlusButton.click(function() {
-            let time = parseFloat(self.currentDuration) + 0.5;
+            let time = parseFloat(self.currentDuration) + 0.25;
             self.currentDuration = time;
             self.durationInput.val(self.currentDuration);
         });
         self.durationMinusButton.click(function() {
-            let time = parseFloat(self.currentDuration) - 0.5;
+            let time = parseFloat(self.currentDuration) - 0.25;
             self.currentDuration = time;
             self.durationInput.val(self.currentDuration);
         });
