@@ -9,7 +9,7 @@ ControllerState.prototype.setState = function() {
     if (view.currentIndex === 0) {
         view.controllerState = view.START_STATE;
         //if we are not the first one, are we at the end?
-    } else if (!view.vttObj.vttSegArray[view.currentIndex + 1]) {
+    } else if (!view.timelineObj.segArray[view.currentIndex + 1]) {
         //check to see if we'd be the last segment in the video...
         if (view.playerState.isAtEnd()) {
             view.controllerState = view.END_STATE;
@@ -36,7 +36,7 @@ ControllerState.prototype.setUISegData = function() {
 ControllerState.prototype.updateWorkingSegment = function() {
     view.workingSeg.text1 = view.text1.val();
     view.workingSeg.text2 = view.text2.val();
-    view.vttObj.updateSegment(view.workingSeg);
+    view.timelineObj.updateSegment(view.workingSeg);
 };
 
 //Defines behavior when we are on the first possible segment.
@@ -44,13 +44,13 @@ ControllerState.prototype.updateWorkingSegment = function() {
 var StartState = function(view) {
     this.name = "StartState";
     this.clickNext = function() {
-        if (!view.vttObj.get(view.currentIndex)) {
+        if (!view.timelineObj.get(view.currentIndex)) {
             //create a new working segment.
             let start = view.workingSeg.segStopTime;
             let stop = view.workingSeg.segStartTime + view.DEFAULT_DURATION;
-            view.vttObj.addSegment(new SegObject(view.currentIndex, start, view.DEFAULT_DURATION));
+            view.timelineObj.addSegment(new SegObject(view.currentIndex, start, view.DEFAULT_DURATION));
         }
-        view.workingSeg = view.vttObj.get(view.currentIndex);
+        view.workingSeg = view.timelineObj.get(view.currentIndex);
         this.setState();
     };
     this.clickPrev = function() {
@@ -76,13 +76,13 @@ var HeadState = function(view) {
     this.clickNext = function() {
         let start = view.workingSeg.segStopTime;
         let stop = view.workingSeg.segStartTime + view.DEFAULT_DURATION;
-        view.vttObj.addSegment(new SegObject(view.currentIndex, start, view.DEFAULT_DURATION));
-        view.workingSeg = view.vttObj.get(view.currentIndex);
+        view.timelineObj.addSegment(new SegObject(view.currentIndex, start, view.DEFAULT_DURATION));
+        view.workingSeg = view.timelineObj.get(view.currentIndex);
         this.setState();
     };
 
     this.clickPrev = function() {
-        view.workingSeg = view.vttObj.vttSegArray[view.currentIndex];
+        view.workingSeg = view.timelineObj.segArray[view.currentIndex];
         this.setState();
     };
 
@@ -101,11 +101,11 @@ HeadState.prototype = Object.create(ControllerState.prototype);
 var NotHeadState = function(view) {
     this.name = "NotHeadState";
     this.clickNext = function() {
-        view.workingSeg = view.vttObj.get(view.currentIndex);
+        view.workingSeg = view.timelineObj.get(view.currentIndex);
         this.setState();
     };
     this.clickPrev = function() {
-        view.workingSeg = view.vttObj.get(view.currentIndex);
+        view.workingSeg = view.timelineObj.get(view.currentIndex);
         this.setState();
     };
 
@@ -128,7 +128,7 @@ var EndState = function(view) {
 
     };
     this.clickPrev = function() {
-        view.workingSeg = view.vttObj.get(view.currentIndex);
+        view.workingSeg = view.timelineObj.get(view.currentIndex);
         this.setState();
     };
     this.clickInsert = function() {

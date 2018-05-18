@@ -46,6 +46,13 @@ body {
     justify-content: flex-end;
     padding: 0 0 0 15px;
 }
+#tabs{
+    margin: 0 auto;
+    min-width: 800px;
+    max-width: 1200px;
+    display: flex;
+
+}
 
 #segment-contoller-contain {
     height: 40px;
@@ -57,7 +64,17 @@ body {
 #videoUrl {
     width:100%;
     margin: 5px;
+}   
+/*
+.tab {
+    margin-top: 10px;
+    display: inline-block;
+    font-size: 1.5em;
+    text-align: center;
+    flex-grow: 1;
+    border: solid black 5px;
 }
+*/
 
 .control-button {
     width: 120px;
@@ -114,4 +131,49 @@ body {
     margin: auto 20px;
     font-size: 1.3em;
     text-align: center;
+}
+/*tab styling */
+.tab {
+    overflow: hidden;
+    border: 1px solid #ccc;
+    background-color: #f1f1f1;
+    margin: 0 auto;
+    min-width: 800px;
+    max-width: 1200px;
+    display: flex;
+}
+
+/* Style the buttons that are used to open the tab content */
+.tab button {
+    background-color: inherit;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    transition: 0.3s;
+    text-align: center;
+    flex-grow: 1;
+}
+
+.tab .selected{
+    background-color: #999;
+}
+
+/* Change background color of buttons on hover */
+.tab button:hover {
+    background-color: #ddd;
+}
+
+/* Create an active/current tablink class */
+.tab button.active {
+    background-color: #ccc;
+}
+
+/* Style the tab content */
+.tabcontent {
+    display: none;
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+    border-top: none;
 }

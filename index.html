@@ -18,7 +18,7 @@ Description:  A local html application that creates WebVtt text for closed capti
             The program loops the selected video file over the specified duration to make
             captioning easier." />
     <link rel="stylesheet" href="css/style.css">
-    <script src="./js/lib/jquery-3.1.1.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <script src="https://www.youtube.com/iframe_api"></script>
     <title>VTT Creator</title>
 </head>
@@ -53,8 +53,14 @@ Description:  A local html application that creates WebVtt text for closed capti
                 <div class="center" id="segDurLabel">Segment Duration<br><input id="durationInput" value="3" /></div>
                 <div class="left"> <button type="button" id="durationPlusButton" class="duration-button"> + </button></div>
             </div>
-        </div>
+        </div><
     </div>
+    <div class="tab">
+        <button id="vtt" class="tablinks selected" >VTT File</button>
+        <button id="array1" class="tablinks" >Array 1</button>
+        <button id="array2" class="tablinks" >Array 2</button>
+      </div>
+      
     <div id="vttOutput">
         <textarea id="vttOutputText" class="textInput" rows="20">Ouput</textarea>
     </div>

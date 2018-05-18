@@ -7,12 +7,13 @@
 var View = function() {
     var self = this;
     self.DEFAULT_DURATION = 3;
-    self.vttObj;
+    self.timelineObj;
     self.controllerState;
     self.playerState;
     self.currentDuration;
     self.currentIndex;
     self.fileName = "";
+    self.currentOutput = "vtt";
 
     //initializes the program on page load.
     self.init = function() {
@@ -37,6 +38,13 @@ var View = function() {
         self.NOT_HEAD_STATE = new NotHeadState(self);
         self.END_STATE = new EndState(self);
 
+        $('.tablinks').click(function(){
+            $('.tablinks').removeClass("selected");
+            $(this).addClass("selected");
+            self.currentOutput = $(this).attr("id");
+            self.updateDisplay();
+        });
+
 
         self.initGUI = function() {
             self.text1.val('');
@@ -44,15 +52,16 @@ var View = function() {
             self.outputText.val('');
             self.initModel();
             self.controllerState.setUI();
+
         };
 
         self.initModel = function() {
             self.currentIndex = 0;
-            self.vttObj = new VttObject(self);
-            self.vttObj.addSegment(new SegObject(0, 0, self.DEFAULT_DURATION, self.DEFAULT_DURATION));
-            self.workingSeg = self.vttObj.get(0);
+            self.timelineObj = new TimelineObject(self);
+            self.timelineObj.addSegment(new SegObject(0, 0, self.DEFAULT_DURATION, self.DEFAULT_DURATION));
+            self.workingSeg = self.timelineObj.get(0);
             self.controllerState = new StartState(self);
-            self.outputObj = new VttOutput(self);
+            self.vttOutputObj = new VttOutput(self);
             self.controllerState = new StartState(self);
 
         };
@@ -77,6 +86,7 @@ var View = function() {
              if (src.indexOf("youtube") >= 0) {
                 self.addYouTubePlayer(src);
             } else {
+                console.log(src);
                 self.addMp4Player(src);
             }
 
@@ -102,17 +112,17 @@ var View = function() {
             self.currentIndex++;
             self.controllerState.updateWorkingSegment();
             self.controllerState.clickNext();
-            self.generateVTT();
+            self.updateDisplay();
         });
         self.prevButton.click(function() {
             self.currentIndex--;
             self.controllerState.updateWorkingSegment();
             self.controllerState.clickPrev();
-            self.generateVTT();
+            self.updateDisplay();
         });
         self.finishButton.click(function() {
             self.controllerState.updateWorkingSegment();
-            self.generateVTT();
+            self.updateDisplay();
         });
 
     };
@@ -128,8 +138,19 @@ var View = function() {
         console.log("------End Segment-------")
     };
 
-    self.generateVTT = function() {
-        self.outputText.val(self.outputObj.buildOutput());
+    self.updateDisplay = function() {
+        switch(self.currentOutput){
+            case 'vtt':
+             self.outputText.val(self.vttOutputObj.buildOutput());
+             break;
+            case 'array1':
+              self.outputText.val("array1 format will go here");
+              break;
+            case 'array2':
+              self.outputText.val("array2 format will go here");
+              break;
+        }
+ 
     };
 
     self.loadFileSelector = function() {
